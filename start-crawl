@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# Try to get the API from job's environment variables
+#if [ -z "$CRAWLERA_APIKEY" ]; then
+#  CRAWLERA_APIKEY=`echo $SHUB_JOB_ENV | jq .CRAWLERA_APIKEY | tr -d \"`
+#fi
+
+# Try to get the API from the spider's arguments
+#if [ -z "$CRAWLERA_APIKEY" ]; then
+#  CRAWLERA_APIKEY=`echo $SHUB_JOB_DATA | jq .spider_args.CRAWLERA_APIKEY | tr -d \"`
+#fi
+
+#Check if we do have an API Key to work with
+#if [ -z "$CRAWLERA_APIKEY" ]; then
+#  echo "CRAWLERA_APIKEY environment variable not defined. Aborting";
+#  exit 1;
+#fi
+echo "starting crawlera-headless-proxy"
+PID_PROXY=$(/usr/bin/env python -c "import subprocess;proc=subprocess.Popen('/usr/local/bin/crawlera-headless-proxy -p 3128 -a ca8e16eeca8e4c9da8dc39383670b2da -x profile=desktop'.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE);print(proc.pid)")
+#crawlera-headless-proxy -v -d -p 3128 -a ca8e16eeca8e4c9da8dc39383670b2da -x profile=desktop &
+echo "Started Crawlera headless proxy using API Key ca8e16eeca8e4c9da8dc39383670b2da"
+echo "PID PROXY = " $PID_PROXY
+ps aux | grep $PID_PROXY
+lsof -i :3128
+# Run regular start-crawl
+/usr/bin/env python -m sh_scrapy.crawl
+
+# Kill crawlera-headless-proxy so the job can finish.
+#pkill -f crawlera-headless-proxy;
+kill -9 $PID_PROXY
+
+exit 0;
